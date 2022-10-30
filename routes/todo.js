@@ -4,29 +4,34 @@ var router = express.Router();
 let todoController = require('../controllers/todo');
 
 // Helper function for guard purposes
-function requireAuth(req, res, next)
+const requireAuth = (req, res, next) =>
 {
     // check if the user is logged in
-    
-    // ADD YOUR CODE HERE        
+    res.locals.isAuthenticated = req.isAuthenticated();
 
+    if( req.isAuthenticated() ) {
+        return next();
+    }
+    
+    req.session.url = req.originalUrl;
+    return res.redirect('../users/signin');
 }
 
 /* GET list of items */
-router.get('/list', todoController.todoList);
+router.get('/list', requireAuth, todoController.todoList);
 
 // Route for Details
-router.get('/details/:id', todoController.details);
+router.get('/details/:id', requireAuth, todoController.details);
 
 // Routers for edit
-router.get('/edit/:id', todoController.displayEditPage);
+router.get('/edit/:id', requireAuth, todoController.displayEditPage);
 router.post('/edit/:id', todoController.processEditPage);
 
 // Delete
-router.get('/delete/:id', todoController.performDelete);
+router.get('/delete/:id', requireAuth, todoController.performDelete);
 
 /* GET Route for displaying the Add page - CREATE Operation */
-router.get('/add', todoController.displayAddPage);
+router.get('/add', requireAuth, todoController.displayAddPage);
 
 /* POST Route for processing the Add page - CREATE Operation */
 router.post('/add', todoController.processAddPage);

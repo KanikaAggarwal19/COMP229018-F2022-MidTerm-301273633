@@ -49,6 +49,24 @@ module.exports.displayEditPage = (req, res, next) => {
     
     // ADD YOUR CODE HERE
 
+    let id = req.params.id;
+
+    TodoModel.findById(id, (err, todoToShow) => {
+        if(err)
+        {
+            console.log(err);
+            res.end(err);
+        }
+        else
+        {
+            //show the edit view
+            res.render('todo/add_edit', {
+                title: 'Edit To-Do', 
+                todo: todoToShow
+            })
+        }
+    });  
+
 }
 
 // Processes the data submitted from the Edit form to update a todo
@@ -67,6 +85,19 @@ module.exports.processEditPage = (req, res, next) => {
 
     // ADD YOUR CODE HERE
 
+    TodoModel.findByIdAndUpdate(id, updatedTodo, { useFindAndModify: false }).then(e => {
+        res.statusCode = 302;
+            res.setHeader("Location", "../list");
+            res.end();
+        
+    }).catch(err => {
+        res.status(500).send({
+          message:
+            err.message || "Some error occurred while updating the task."
+        });
+      });
+
+
 }
 
 // Deletes a todo based on its id.
@@ -74,12 +105,38 @@ module.exports.performDelete = (req, res, next) => {
 
     // ADD YOUR CODE HERE
 
+    let id = req.params.id
+    
+    console.log(req.body);
+
+    // ADD YOUR CODE HERE
+
+    TodoModel.findByIdAndRemove(id).then(data => {
+        if (!data) {
+          res.status(404).send({
+            message: `Cannot delete task with id=${id}.`
+          });
+        } else {  
+            res.statusCode = 302;
+            res.setHeader("Location", "../list");
+            res.end();
+        }
+      })
+      .catch(err => {
+        res.status(500).send({
+          message: "Could not delete task with id=" + id
+        });
+      });
+
 }
 
 // Renders the Add form using the add_edit.ejs template
 module.exports.displayAddPage = (req, res, next) => {
 
-    // ADD YOUR CODE HERE          
+    res.render('todo/add_edit', {
+        title: 'Add a new To-Do', 
+        todo: {}
+    })     
 
 }
 
@@ -89,12 +146,26 @@ module.exports.processAddPage = (req, res, next) => {
     console.log(req.body);
 
     let newTodo = TodoModel({
-        _id: req.body.id,
+        _id: Math.random().toString(36).slice(2),
         task: req.body.task,
         description: req.body.description,
         complete: req.body.complete ? true : false
     });
 
     // ADD YOUR CODE HERE
+
+    TodoModel.create(newTodo).then(e => {
+        res.statusCode = 302;
+            res.setHeader("Location", "../todo/list");
+            res.end();
+        
+    }).catch(err => {
+        res.status(500).send({
+          message:
+            err.message || "Some error occurred while creating the task."
+        });
+      });
+
+    
     
 }
